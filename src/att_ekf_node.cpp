@@ -3,9 +3,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/MagneticField.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <nav_msgs/OccupancyGrid.h>
-#include <nav_msgs/Path.h>
-#include <tf/transform_listener.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include <Eigen/Eigen>
 #include "att_ekf.h"
@@ -20,21 +18,24 @@ Att_ekf att_ekf;
 deque<pair<double, geometry_msgs::Vector3Stamped> > mag_q;
 deque<pair<double, sensor_msgs::Imu> >imu_q;
 
-Quaterniond q_gt;
 
+ros::Subscriber imu_bias_sub;
+bool imu_bias_initialized = false;
+Vector3d gyro_bias;
+Vector3d acc_bias;
+
+Quaterniond q_gt;
 ros::Publisher pose_pub, pose_gt_pub;
 
 void magCallback(const geometry_msgs::Vector3StampedConstPtr& msg)
 {
-	
 	geometry_msgs::Vector3Stamped mag_msg = *msg;
 	double t = msg->header.stamp.toSec();
 	mag_q.push_back(make_pair(t, mag_msg));
-
-	Vector3d mag;
-	mag(0) = msg->vector.x;
-	mag(1) = msg->vector.y;
-	mag(2) = msg->vector.z;
+	// Vector3d mag;
+	// mag(0) = msg->vector.x;
+	// mag(1) = msg->vector.y;
+	// mag(2) = msg->vector.z;
 	//cout << "mag: " << mag.transpose() << endl;
 }
 
@@ -51,6 +52,18 @@ void imuCallback(const sensor_msgs::ImuConstPtr & msg)
 	q_gt.y() = msg->orientation.y;
 	q_gt.z() = msg->orientation.z;
 	//cout << "q_gt: " << q_gt.w() << " " << q_gt.vec().transpose() << endl;
+}
+
+void imuBiasCallback(const sensor_msgs::ImuConstPtr & msg)
+{
+	acc_bias(0) = msg->linear_acceleration.x;
+	acc_bias(1) = msg->linear_acceleration.y;
+	acc_bias(2) = msg->linear_acceleration.z;
+	gyro_bias(0) = msg->angular_velocity.x;
+	gyro_bias(1) = msg->angular_velocity.y;
+	gyro_bias(2) = msg->angular_velocity.z;
+	imu_bias_initialized = true;
+	imu_bias_sub.shutdown();
 }
 
 void publish_pose()
@@ -81,6 +94,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "laser_localization");
 	ros::NodeHandle n("~");
 	ros::Subscriber imu_sub = n.subscribe("/imu", 100, imuCallback);
+	imu_bias_sub = n.subscribe("/imu_bias", 100, imuBiasCallback);
 	ros::Subscriber mag_sub = n.subscribe("/magnetic_field", 100, magCallback);
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("/pose", 10);
 	pose_gt_pub = n.advertise<geometry_msgs::PoseStamped>("/pose_gt", 10);
@@ -103,6 +117,11 @@ int main(int argc, char **argv)
 				gyro(1) = imu_q.front().second.angular_velocity.y;
 				gyro(2) = imu_q.front().second.angular_velocity.z;
 				double t = imu_q.front().first;
+				if(imu_bias_initialized) 
+				{
+					acc -= acc_bias;
+					gyro -= gyro_bias;
+				}
 				att_ekf.update_imu(acc, gyro, t);
 				imu_q.pop_front();
 			}else 

@@ -2,6 +2,7 @@
 	<node pkg="att_ekf" type="att_ekf" name="att_ekf" output="screen">
 		<remap from="/imu" to="/raw_imu"/>
 		<remap from="/magnetic_field" to="/magnetic" />
+		<remap from="/imu_bias" to="/raw_imu/bias" />
 	</node>
   	<!-- Start rviz visualization with preset config -->
 <!--   	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find att_ekf)/rviz_cfg/att_ekf.rviz"/> -->
