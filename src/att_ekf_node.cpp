@@ -56,7 +56,7 @@ void imuCallback(const sensor_msgs::ImuConstPtr & msg)
 
 	geometry_msgs::PoseStamped pose_gt;
 	pose_gt.header.stamp = ros::Time(t_gt);
-	pose_gt.header.frame_id = "/world";
+	pose_gt.header.frame_id = "/base_footprint";
  	pose_gt.pose.orientation.w = q_gt.w();
  	pose_gt.pose.orientation.x = q_gt.x();
  	pose_gt.pose.orientation.y = q_gt.y();
@@ -83,7 +83,7 @@ void publish_pose()
 	MatrixXd m = att_ekf.get_rotation_matrix();
  	Quaterniond q = mat2quaternion(m);
  	pose.header.stamp = ros::Time(att_ekf.get_time());
- 	pose.header.frame_id = "/world";
+ 	pose.header.frame_id = "/base_footprint";
  	pose.pose.orientation.w = q.w();
  	pose.pose.orientation.x = q.x();
  	pose.pose.orientation.y = q.y();
