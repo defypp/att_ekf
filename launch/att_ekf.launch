@@ -5,6 +5,6 @@
 		<remap from="/imu_bias" to="/raw_imu/bias" />
 	</node>
   	<!-- Start rviz visualization with preset config -->
-<!--   	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find att_ekf)/rviz_cfg/att_ekf.rviz"/> -->
+  	<!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find att_ekf)/rviz_cfg/att_estimation.rviz"/> -->
 
 </launch>

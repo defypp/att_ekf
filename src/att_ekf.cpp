@@ -25,7 +25,7 @@ Att_ekf::Att_ekf()
 
 	P.setZero();
 	P.block<3, 3>(0, 0) = R_gyro;
-	P.block<3, 3>(3, 3) = R_gyro*1000;
+	P.block<3, 3>(3, 3) = R_gyro;
 	P.block<3, 3>(6, 6) = R_acc;
 	P.block<3, 3>(9, 9) = R_mag;
 }
@@ -53,11 +53,9 @@ void Att_ekf::predict(double t)
 	A.block<3, 3>(6, 0) += skew_symmetric(ra)*dt;
 	A.block<3, 3>(9, 0) += skew_symmetric(rm)*dt;
 
-
-
 	P = A*P*A.transpose() + Q;//Q?
 	curr_t = t;
-	//cout << "predict: " << x.transpose() << endl;
+	
 }
 void Att_ekf::update_magnetic(Vector3d& mag, double t)
 {
@@ -82,7 +80,7 @@ void Att_ekf::update_magnetic(Vector3d& mag, double t)
 	MatrixXd K = P.inverse()*H.transpose()*(H*P.inverse()*H.transpose() + R_mag).inverse();
 	MatrixXd I = MatrixXd::Identity(12, 12);
 
-
+	cout << "mag K: " << K << endl;
 	x = x + K*(z - H*x);
 	P = (I- K*H)*P.inverse();
 	//cout << "update mag: " << x.transpose() << endl;
@@ -112,8 +110,9 @@ void Att_ekf::update_imu(Vector3d &acc, Vector3d & gyro, double t)
 	H.block<3, 3>(0, 0) = Matrix3d::Identity();
 	H.block<3, 3>(3, 6) = Matrix3d::Identity();
 
-	MatrixXd K = P.inverse()*H.transpose()*(H*P.inverse()*H.transpose()).inverse();
+	MatrixXd K = P.inverse()*H.transpose()*(H*P.inverse()*H.transpose() + R_imu).inverse();
 	MatrixXd I = MatrixXd::Identity(12, 12);
+	cout << "imu K: " << K << endl;
 	x = x + K*(z - H*x);
 	P = (I- K*H)*P.inverse();
 	//cout << "update imu: " << x.transpose() << endl;
