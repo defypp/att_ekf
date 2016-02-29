@@ -35,8 +35,7 @@ void magCallback(const geometry_msgs::Vector3StampedConstPtr& msg)
 	mag(0) = msg->vector.x;
 	mag(1) = msg->vector.y;
 	mag(2) = msg->vector.z;
-	cout << "mag: " << mag.transpose() << endl;
-	
+	//cout << "mag: " << mag.transpose() << endl;
 }
 
 
@@ -92,7 +91,7 @@ int main(int argc, char **argv)
 		
 		if(imu_q.size() == 0 || mag_q.size() == 0) continue;
 
-		while(imu_q.back().first - imu_q.front().first > 0.15)//buffer 0.15s
+		while(imu_q.back().first - imu_q.front().first > 0.05)//buffer size
 		{
 			if(imu_q.front().first < mag_q.front().first)
 			{
@@ -116,11 +115,12 @@ int main(int argc, char **argv)
 				att_ekf.update_magnetic(mag, t);
 				mag_q.pop_front();
 			}
+			if(imu_q.size() == 0 || mag_q.size() == 0) break;
 		}
-		cout << "t: " << att_ekf.get_time() << endl;
-		Quaterniond q = mat2quaternion(att_ekf.get_rotation_matrix());
-		cout << "q: " << q.w() << " " << q.vec().transpose() << endl;
-		cout << "q_gt: " << q_gt.w() << " " << q_gt.vec().transpose() << endl;
+		// cout << "t: " << att_ekf.get_time() << endl;
+		// Quaterniond q = mat2quaternion(att_ekf.get_rotation_matrix());
+		// cout << "q: " << q.w() << " " << q.vec().transpose() << endl;
+		// cout << "q_gt: " << q_gt.w() << " " << q_gt.vec().transpose() << endl;
 
 		publish_pose();
 		//Quaterniond dq = q.inverse()*q_gt;

@@ -25,6 +25,7 @@ Att_ekf::Att_ekf()
 	R_imu.block<3, 3>(0, 0) = R_acc;
 	R_imu.block<3, 3>(3, 3) = R_gyro;
 
+	P = MatrixXd::Identity(12, 12)*10;
 }
 Att_ekf::~Att_ekf()
 {
@@ -32,7 +33,9 @@ Att_ekf::~Att_ekf()
 }
 void Att_ekf::predict(double t)
 {
+	cout << "before predict: " << x.transpose() << endl;
 	double dt = t - curr_t;
+	cout << "dt :" << dt << endl;
 	Vector3d w = x.head(3);
 	Vector3d wa  = x.segment<3>(3);
 	Vector3d ra = x.segment<3>(6);
@@ -56,7 +59,6 @@ void Att_ekf::predict(double t)
 }
 void Att_ekf::update_magnetic(Vector3d& mag, double t)
 {
-	rm = mag;
 	if(!(mag_initialized && imu_initialized) )
 	{
 		x.tail(3) = mag;
@@ -64,7 +66,12 @@ void Att_ekf::update_magnetic(Vector3d& mag, double t)
 		curr_t = t;
 		return;
 	}
-	if(t < curr_t) cout << "t is smaller than curr_t" << endl;
+	if(t < curr_t) 
+	{
+		cout << "t is smaller than curr_t" << endl;
+		return;
+	}
+
 	predict(t);
 
 	MatrixXd H = MatrixXd::Zero(3, 12);
@@ -73,14 +80,14 @@ void Att_ekf::update_magnetic(Vector3d& mag, double t)
 
 	MatrixXd K = P.inverse()*H.transpose()*(H*P.inverse()*H.transpose() + R_mag).inverse();
 	MatrixXd I = MatrixXd::Identity(12, 12);
+
+
 	x = x + K*(z - H*x);
 	P = (I- K*H)*P.inverse();
-	//cout << "update mag: " << x.transpose() << endl;
+	cout << "update mag: " << x.transpose() << endl;
 }
 void Att_ekf::update_imu(Vector3d &acc, Vector3d & gyro, double t)
 {
-	ra = acc;
-
 	if(!(mag_initialized && imu_initialized))
 	{
 		x.head(3) = gyro;
@@ -90,14 +97,17 @@ void Att_ekf::update_imu(Vector3d &acc, Vector3d & gyro, double t)
 		curr_t = t;
 		return;
 	}
-	if(t < curr_t) cout << "t is smaller than curr_t" << endl;
-
+	if(t < curr_t) 
+	{
+		cout << "t is smaller than curr_t" << endl;
+		return;
+	}
 	predict(t);
+
 	MatrixXd H = MatrixXd::Zero(6, 12);
 	VectorXd z(6);
 	z.head(3) = gyro;
 	z.tail(3) = acc;
-
 	H.block<3, 3>(0, 0) = Matrix3d::Identity();
 	H.block<3, 3>(3, 6) = Matrix3d::Identity();
 
@@ -105,7 +115,7 @@ void Att_ekf::update_imu(Vector3d &acc, Vector3d & gyro, double t)
 	MatrixXd I = MatrixXd::Identity(12, 12);
 	x = x + K*(z - H*x);
 	P = (I- K*H)*P.inverse();
-	//cout << "update imu: " << x.transpose() << endl;
+	cout << "update imu: " << x.transpose() << endl;
 }
 
 
@@ -113,18 +123,14 @@ Matrix3d Att_ekf::get_rotation_matrix()
 {
 	
 	if(!(mag_initialized && imu_initialized)) return Matrix3d::Identity();
-
 	Matrix3d Rbn;//ENU to body
 	Vector3d ra = x.segment<3>(6);
 	Vector3d rm = x.segment<3>(9);
-	cout << "rm: " << rm.transpose() << endl;
-	cout << "ra: " << ra.transpose() << endl;
 	Vector3d Iz = ra;//ENU coordinate
-	Vector3d Iy = skew_symmetric(Iz)*rm;//why rm in ENU coordinate is [1 0 z], it should be [0 1 x]
+	Vector3d Iy = skew_symmetric(Iz)*rm;//why rm in ENU coordinate is [1 0 x], it should be [0 1 x]
 	Vector3d Ix = skew_symmetric(Iy)*Iz;
 
 	Ix /= Ix.norm(); Iy /= Iy.norm(); Iz /= Iz.norm();
-
 	Rbn.col(0) = Ix; Rbn.col(1) = Iy; Rbn.col(2) = Iz;
 	return Rbn.transpose();
 }

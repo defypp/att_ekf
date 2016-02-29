@@ -28,10 +28,7 @@ private:
 
 	bool imu_initialized;
 	bool mag_initialized;
-	const double acc_cov = 1e-2;
-	const double gyro_cov = 1e-4;
-	const double mag_cov = 1e-1;
-
-	//TODO 
-	Vector3d rm, ra;//test
+	const double acc_cov = 0.5;
+	const double gyro_cov = 0.05;
+	const double mag_cov = 0.5;
 };
