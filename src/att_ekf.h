@@ -13,16 +13,25 @@ public:
 	void update_magnetic(Vector3d& mag, double t);
 	void update_imu(Vector3d &acc, Vector3d & gyro, double t);
 	Matrix3d get_rotation_matrix();
-
+	double get_time() {return curr_t;}
 private:
 	double curr_t;
 	Matrix<double, 12, 1> x;//anguler velocity, angular acceleration velocity, gravity field, magnetic field 
 	Matrix<double, 12, 12> P;//covariance
-	Matrix<double, 12, 12> Q;//process noise
+	const Matrix<double, 12, 12> Q = MatrixXd::Identity(12, 12)*0.01;
+
+	const Matrix<double, 3, 3> R_acc = MatrixXd::Identity(3, 3)*acc_cov;
+	const Matrix<double, 3, 3> R_gyro = MatrixXd::Identity(3, 3)*gyro_cov;
+	const Matrix<double, 3, 3> R_mag = MatrixXd::Identity(3, 3)*mag_cov;
 
 	Matrix<double, 6, 6> R_imu;//measurement noise
-	Matrix<double, 3, 3> R_mag;//measurement noise
 
 	bool imu_initialized;
 	bool mag_initialized;
+	const double acc_cov = 1e-2;
+	const double gyro_cov = 1e-4;
+	const double mag_cov = 1e-1;
+
+	//TODO 
+	Vector3d rm, ra;//test
 };
