@@ -80,7 +80,6 @@ void Att_ekf::update_magnetic(Vector3d& mag, double t)
 	MatrixXd K = P.inverse()*H.transpose()*(H*P.inverse()*H.transpose() + R_mag).inverse();
 	MatrixXd I = MatrixXd::Identity(12, 12);
 
-	//cout << "mag K: " << K << endl;
 	x = x + K*(z - H*x);
 	P = (I- K*H)*P.inverse();
 	//cout << "update mag: " << x.transpose() << endl;
@@ -112,7 +111,7 @@ void Att_ekf::update_imu(Vector3d &acc, Vector3d & gyro, double t)
 
 	MatrixXd K = P.inverse()*H.transpose()*(H*P.inverse()*H.transpose() + R_imu).inverse();
 	MatrixXd I = MatrixXd::Identity(12, 12);
-	//cout << "imu K: " << K << endl;
+
 	x = x + K*(z - H*x);
 	P = (I- K*H)*P.inverse();
 	//cout << "update imu: " << x.transpose() << endl;

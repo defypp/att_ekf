@@ -21,11 +21,8 @@ deque<pair<double, sensor_msgs::Imu> >imu_q;
 
 ros::Subscriber imu_bias_sub;
 bool imu_bias_initialized = false;
-Vector3d gyro_bias;
-Vector3d acc_bias;
+Vector3d gyro_bias, acc_bias;
 
-Quaterniond q_gt;
-double t_gt;
 ros::Publisher pose_pub, pose_gt_pub;
 
 void magCallback(const geometry_msgs::Vector3StampedConstPtr& msg)
@@ -33,11 +30,6 @@ void magCallback(const geometry_msgs::Vector3StampedConstPtr& msg)
 	geometry_msgs::Vector3Stamped mag_msg = *msg;
 	double t = msg->header.stamp.toSec();
 	mag_q.push_back(make_pair(t, mag_msg));
-	// Vector3d mag;
-	// mag(0) = msg->vector.x;
-	// mag(1) = msg->vector.y;
-	// mag(2) = msg->vector.z;
-	//cout << "mag: " << mag.transpose() << endl;
 }
 
 
@@ -47,22 +39,15 @@ void imuCallback(const sensor_msgs::ImuConstPtr & msg)
 	sensor_msgs::Imu imu_msg = *msg;
 	imu_q.push_back(make_pair(t, imu_msg));
 
-	// Quaterniond q;
-	q_gt.w() = msg->orientation.w;
-	q_gt.x() = msg->orientation.x;
-	q_gt.y() = msg->orientation.y;
-	q_gt.z() = msg->orientation.z;
-	t_gt = msg->header.stamp.toSec();
-
-	geometry_msgs::PoseStamped pose_gt;
-	pose_gt.header.stamp = ros::Time(t_gt);
-	pose_gt.header.frame_id = "/base_footprint";
- 	pose_gt.pose.orientation.w = q_gt.w();
- 	pose_gt.pose.orientation.x = q_gt.x();
- 	pose_gt.pose.orientation.y = q_gt.y();
- 	pose_gt.pose.orientation.z = q_gt.z();
- 	pose_gt_pub.publish(pose_gt);
-	//cout << "q_gt: " << q_gt.w() << " " << q_gt.vec().transpose() << endl;
+	//publish the groundtruth of the pose
+	geometry_msgs::PoseStamped pose;
+	pose.header.stamp = msg->header.stamp;
+	pose.header.frame_id = "/base_footprint";
+ 	pose.pose.orientation.w = msg->orientation.w;
+ 	pose.pose.orientation.x = msg->orientation.x;
+ 	pose.pose.orientation.y = msg->orientation.y;
+ 	pose.pose.orientation.z = msg->orientation.z;
+ 	pose_gt_pub.publish(pose);
 }
 
 void imuBiasCallback(const sensor_msgs::ImuConstPtr & msg)
@@ -140,17 +125,9 @@ int main(int argc, char **argv)
 			}
 			if(imu_q.size() == 0 || mag_q.size() == 0) break;
 		}
-		// cout << "t: " << att_ekf.get_time() << endl;
-		// Quaterniond q = mat2quaternion(att_ekf.get_rotation_matrix());
-		// cout << "q: " << q.w() << " " << q.vec().transpose() << endl;
-		// cout << "q_gt: " << q_gt.w() << " " << q_gt.vec().transpose() << endl;
 
-		
-		//Quaterniond dq = q.inverse()*q_gt;
-		//cout << "dq: " << dq.w() << " " << dq.vec().transpose() << endl;
 		loop_rate.sleep();
 	}
-	ros::spin();
-
+	
 	return 0;
 }
