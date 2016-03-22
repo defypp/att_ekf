@@ -23,7 +23,9 @@ ros::Subscriber imu_bias_sub;
 bool imu_bias_initialized = false;
 Vector3d gyro_bias, acc_bias;
 
-ros::Publisher pose_pub, pose_gt_pub;
+Vector3d currentPosition;
+
+ros::Publisher pose_pub;
 
 void magCallback(const geometry_msgs::Vector3StampedConstPtr& msg)
 {
@@ -38,16 +40,14 @@ void imuCallback(const sensor_msgs::ImuConstPtr & msg)
 	double t = msg->header.stamp.toSec();
 	sensor_msgs::Imu imu_msg = *msg;
 	imu_q.push_back(make_pair(t, imu_msg));
+}
 
-	//publish the groundtruth of the pose
-	geometry_msgs::PoseStamped pose;
-	pose.header.stamp = msg->header.stamp;
-	pose.header.frame_id = "/base_footprint";
- 	pose.pose.orientation.w = msg->orientation.w;
- 	pose.pose.orientation.x = msg->orientation.x;
- 	pose.pose.orientation.y = msg->orientation.y;
- 	pose.pose.orientation.z = msg->orientation.z;
- 	pose_gt_pub.publish(pose);
+
+void poseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
+{
+	currentPosition(0) = msg->pose.position.x;
+	currentPosition(1) = msg->pose.position.y;
+	currentPosition(2) = msg->pose.position.z;
 }
 
 void imuBiasCallback(const sensor_msgs::ImuConstPtr & msg)
@@ -68,7 +68,10 @@ void publish_pose()
 	MatrixXd m = att_ekf.get_rotation_matrix();
  	Quaterniond q = mat2quaternion(m);
  	pose.header.stamp = ros::Time(att_ekf.get_time());
- 	pose.header.frame_id = "/base_footprint";
+ 	pose.header.frame_id = "/world";
+ 	pose.pose.position.x = currentPosition(0);
+ 	pose.pose.position.y = currentPosition(1);
+ 	pose.pose.position.z = currentPosition(2);
  	pose.pose.orientation.w = q.w();
  	pose.pose.orientation.x = q.x();
  	pose.pose.orientation.y = q.y();
@@ -84,7 +87,8 @@ int main(int argc, char **argv)
 	imu_bias_sub = n.subscribe("/imu_bias", 100, imuBiasCallback);
 	ros::Subscriber mag_sub = n.subscribe("/magnetic_field", 100, magCallback);
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("/pose", 10);
-	pose_gt_pub = n.advertise<geometry_msgs::PoseStamped>("/pose_gt", 10);
+	
+	ros::Subscriber pose_gt_sub = n.subscribe("/pose_gt", 100, poseCallback);
 	ros::Rate loop_rate(100);
 	while(ros::ok())
 	{

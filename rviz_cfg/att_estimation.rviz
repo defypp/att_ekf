@@ -59,29 +59,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        front_cam_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        front_cam_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        laser0_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -183,7 +160,7 @@ Visualization Manager:
       Shaft Length: 1
       Shaft Radius: 0.05
       Shape: Axes
-      Topic: /pose_gt
+      Topic: /ground_truth_to_tf/pose
       Value: true
   Enabled: true
   Global Options:
@@ -209,7 +186,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 12.4519
+      Distance: 13.7495
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -221,10 +198,10 @@ Visualization Manager:
         Z: -0.589262
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.530399
+      Pitch: 0.310399
       Target Frame: base_stabilized
       Value: Orbit (rviz)
-      Yaw: 3.21541
+      Yaw: 3.29541
     Saved: ~
 Window Geometry:
   Camera:
