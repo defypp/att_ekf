@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(att_ekf)
 
-set(DCMAKE_BUILD_TYPE "release")
-set(CMAKE_CXX_FLAGS "-std=c++11 -march=native")
+set(CMAKE_BUILD_TYPE "release")
+set(CMAKE_CXX_FLAGS "-DNDEBUG -std=c++11 -march=native -Ofast -Wall -fopenmp")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
