@@ -15,7 +15,7 @@ using namespace std;
 using namespace Eigen;
 
 Att_ekf att_ekf;
-deque<pair<double, geometry_msgs::Vector3Stamped> > mag_q;
+deque<pair<double, Vector3d> > mag_q;
 deque<pair<double, sensor_msgs::Imu> >imu_q;
 
 
@@ -27,11 +27,14 @@ Vector3d currentPosition;
 
 ros::Publisher pose_pub;
 
-void magCallback(const geometry_msgs::Vector3StampedConstPtr& msg)
+void magCallback(const sensor_msgs::MagneticFieldConstPtr& msg)
 {
-	geometry_msgs::Vector3Stamped mag_msg = *msg;
+	Vector3d mag;
+	mag(0) = msg->magnetic_field.x;
+	mag(1) = msg->magnetic_field.y;
+	mag(2) = msg->magnetic_field.z;
 	double t = msg->header.stamp.toSec();
-	mag_q.push_back(make_pair(t, mag_msg));
+	mag_q.push_back(make_pair(t, mag));
 }
 
 
@@ -118,10 +121,10 @@ int main(int argc, char **argv)
 				imu_q.pop_front();
 			}else 
 			{
-				Vector3d mag;
-				mag(0) = mag_q.front().second.vector.x;
-				mag(1) = mag_q.front().second.vector.y;
-				mag(2) = mag_q.front().second.vector.z;
+				Vector3d mag = mag_q.front().second;
+				// mag(0) = mag_q.front().second.vector.x;
+				// mag(1) = mag_q.front().second.vector.y;
+				// mag(2) = mag_q.front().second.vector.z;
 				double t = mag_q.front().first;
 				att_ekf.update_magnetic(mag, t);
 				publish_pose();
